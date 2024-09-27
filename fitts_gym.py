@@ -11,12 +11,7 @@ class FittsEnv(gym.Env):
     def __init__(self, render_mode=None):
         self.window_size = 750 
 
-        self.observation_space = spaces.Dict(
-            {
-                "agent": spaces.Box(0, self.window_size - 1, shape=(2,), dtype=int),
-                "target": spaces.Box(0, self.window_size - 1, shape=(2,), dtype=int),
-            }
-        )
+        self.observation_space = spaces.Box(low=0, high=self.window_size, shape=(1,4), dtype=np.uint8)
 
         self.action_space = spaces.Discrete(4)
 
@@ -93,7 +88,8 @@ class FittsEnv(gym.Env):
             return (self._target_location[0]-self._agent_location[0])**2 + (self._target_location[1]-self._agent_location[1])^2 < (self.target_size/2 + self.cursor_size/2)
 
     def _get_obs(self):
-        return {"agent": self._agent_location, "target": self._target_location}
+        return np.array([self._agent_location[0], self._agent_location[1], self._target_location[0], self._target_location[1]])
+        # return {"agent": self._agent_location, "target": self._target_location}
 
     def _get_info(self):
         return {
