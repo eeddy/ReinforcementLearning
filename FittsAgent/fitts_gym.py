@@ -8,8 +8,9 @@ from gymnasium import spaces
 class FittsEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 60}
 
-    def __init__(self, render_mode=None):
+    def __init__(self, render_mode=None, discrete=True):
         self.window_size = 750 
+        self.discrete = discrete
 
         self.observation_space = spaces.Dict(
             {
@@ -18,7 +19,10 @@ class FittsEnv(gym.Env):
             }
         )
 
-        self.action_space = spaces.Discrete(4)
+        if self.discrete:
+            self.action_space = spaces.Discrete(4)
+        else:
+            self.action_space = spaces.Box(low=np.array([-1.0, -1.0]), high=np.array([1.0, 1.0]), dtype=np.float32)
 
         self._action_to_direction = {
             0: np.array([20, 0]),
@@ -46,7 +50,10 @@ class FittsEnv(gym.Env):
         self._last_dist = 1000000 
 
     def step(self, action):
-        direction = self._action_to_direction[int(action)]
+        if self.discrete:
+           direction = self._action_to_direction[int(action)] 
+        else:
+            direction = action * 15 # 15 is max speed 
 
         # Make sure the agent doesn't leave the screen 
         self._agent_location = np.clip(
