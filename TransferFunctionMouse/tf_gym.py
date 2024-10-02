@@ -15,7 +15,7 @@ class TFGym(gym.Env):
         self.window_size = 750
         self.timer = None
 
-        self.observation_space = spaces.Box(low=np.array([-3000, -3000]), high=np.array([3000, 3000]), dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.array([-120, -120]), high=np.array([120, 120]), dtype=np.float32)
         
         self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([1.0, 1.0]), dtype=np.float32)
 
@@ -41,7 +41,10 @@ class TFGym(gym.Env):
         self._dx = 0
         self._dy = 0
 
+        self.time_since_render = 0
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(0.1) 
         self.sock.bind(('127.0.0.1', 12345))
 
     def step(self, action):
@@ -64,8 +67,10 @@ class TFGym(gym.Env):
         else:
             self.timer = None
 
+        new_dist = math.dist(self._agent_location, self._target_location)
+
         if terminated:
-            reward = 1
+            reward = 1 
         else:
             reward = -0.1
 
@@ -75,7 +80,7 @@ class TFGym(gym.Env):
         if self.render_mode == "human":
             self._render_frame()
 
-        self._last_dist = math.dist(self._agent_location, self._target_location)
+        self._last_dist = new_dist
 
         return observation, reward, terminated, False, info
 
@@ -142,14 +147,20 @@ class TFGym(gym.Env):
             # The following line copies our drawings from `canvas` to the visible window
             self.window.blit(canvas, canvas.get_rect())
             pygame.event.pump()
-            pygame.display.update()
+            
+            if time.time() - self.time_since_render >= 0.01:
+                pygame.display.update()
+                self.time_since_render = time.time()
 
-            # We want to wait for a new event from the EMG controller 
-            data, _ = self.sock.recvfrom(1024)
-            data = str(data.decode("utf-8"))
-            if data:
-                self._dx = int(data.split(' ')[0])
-                self._dy = int(data.split(' ')[1])
+            # We want to wait for a new event from the EMG controller
+            try:
+                data, _ = self.sock.recvfrom(1024)
+                data = str(data.decode("utf-8"))
+                self._dx = float(data.split(' ')[0])
+                self._dy = float(data.split(' ')[1])
+            except:
+                self._dx = 0 
+                self._dy = 0
 
     
     def close(self):

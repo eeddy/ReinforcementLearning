@@ -39,29 +39,22 @@ class SerialReader():
         self.serialInstance.open()
 
     def read_serial_data(self):
-        tot_x = 0
-        tot_y = 0
-        send_time = time.time()
+        buffer = []
         while True:
             try:
-                if time.time() - send_time >= 0.033333333: 
-                    dx = int(tot_x)
-                    dy = int(tot_y)
-                    message = str(dx) + " " + str(dy)
-                    self.sock.sendto(bytes(message, "utf-8"), ('127.0.0.1', 12345))
-                    send_time = time.time()
-                    tot_x = 0 
-                    tot_y = 0
                 if self.serialInstance.in_waiting:
                     packet = self.serialInstance.readline()
                     data = packet.decode("utf").rstrip("\n").split(" ")
                     if data[0] == "OFN":
-                        tot_x += float(data[3]) 
-                        tot_y += float(data[5]) 
+                        dx = float(data[3]) 
+                        dy = float(data[5]) 
+                        buffer.append(dx)
+                        buffer.append(dy)
+                        message = str(dx) + " " + str(dy)
+                        self.sock.sendto(bytes(message, "utf-8"), ('127.0.0.1', 12345))
                     else: 
                         print("not OFN formatted")
                     self.serialInstance.flush()
-
             except Exception as e:
                 print(f"Error reading serial data: {e}")
                 time.sleep(2)
