@@ -7,3 +7,4 @@ Images/*
 .DS_Store
 TransferFunctionMouse
 .vscode/
+TransferFunctionMouse/__pycache__/

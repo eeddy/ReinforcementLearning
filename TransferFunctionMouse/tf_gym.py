@@ -25,6 +25,7 @@ class TFGym(gym.Env):
         self.window = None
         self.clock = None # We can figure it out later 
         self.speed = 1
+        self.fps = 60
 
         # Default parameters for ISO Fitts 
         # gameplay parameters
@@ -44,7 +45,7 @@ class TFGym(gym.Env):
         self.time_since_render = 0
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(0.1) 
+        self.sock.settimeout(1/self.fps) 
         self.sock.bind(('127.0.0.1', 12345))
 
     def step(self, action):
@@ -71,8 +72,10 @@ class TFGym(gym.Env):
 
         if terminated:
             reward = 1 
-        else:
+        elif self._last_dist <= math.dist(self._agent_location, self._target_location):
             reward = -0.1
+        else:
+            reward = 0.1
 
         observation = self._get_obs()
         info = self._get_info()
@@ -148,7 +151,7 @@ class TFGym(gym.Env):
             self.window.blit(canvas, canvas.get_rect())
             pygame.event.pump()
             
-            if time.time() - self.time_since_render >= 0.01:
+            if time.time() - self.time_since_render >= 1/self.fps:
                 pygame.display.update()
                 self.time_since_render = time.time()
 
