@@ -16,10 +16,10 @@ env = TFGym('human')
 
 # model = PPO('MlpPolicy', env, verbose=1)
 # ds, data = generate_dataset()
-# fit(model.policy, ds, num_epochs=2)
-# model.learn(total_timesteps=100000, callback=checkpoint_callback)
+# fit(model.policy, ds, num_epochs=5)
+# model.learn(total_timesteps=100000, callback=checkpoint_callback, log_interval=10_000)
 
-model = PPO.load('logs/rl_model_25000_steps.zip')
+model = PPO.load('logs/rl_model_70000_steps.zip')
 
 obs, info = env.reset()
 while True:
