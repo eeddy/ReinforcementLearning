@@ -3,10 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import numpy as np
 from custom_policy import * 
+from itertools import combinations
 from tf_gym import *
 
-fig, axs = plt.subplots(2,2)
-steps = [1000, 10000, 25000, 35000, 50000]
+# fig, axs = plt.subplots(2,2)
+steps = [1000, 10000, 25000, 35000, 50000, 57000]
 
 for s_i, s in enumerate(steps):
     file = 'logs/rl_model_' + str(s) + '_steps.zip'
@@ -23,34 +24,17 @@ for s_i, s in enumerate(steps):
     arrx = []
     arry = []
     for i in range(0, 140):
-        arrx.append(model.predict(np.array([i,1]), deterministic=True)[0])
-        arry.append(model.predict(np.array([1,i]), deterministic=True)[0])
-
+        arrx.append(model.predict(np.array([i,0]), deterministic=True)[0])
+        arry.append(model.predict(np.array([0,i]), deterministic=True)[0])
+    
     arrx = np.array(arrx)
     arry = np.array(arry)
-    axs[0,0].plot(arrx[:,0], label=s, linewidth=3)
-    axs[1,0].plot(arry[:,1], label=s, linewidth=3)
 
-    arrx = []
-    arry = []
-    for i in range(0, 140):
-        arrx.append(model.predict(np.array([-i,1]), deterministic=True)[0])
-        arry.append(model.predict(np.array([1,-i]), deterministic=True)[0])
+    tf = np.mean([arrx[:,0], arry[:,1]], axis=0)
+    plt.plot(tf,  label=s, linewidth=3)
 
-    arrx = np.array(arrx)
-    arry = np.array(arry)
-    axs[0,1].plot(arrx[:,0], label=s, linewidth=3)
-    axs[1,1].plot(arry[:,1], label=s, linewidth=3)
+    if s_i == len(steps)-1:
+        np.save('transfer_func.npy', tf)
 
-axs[0,0].set_title('+DX')
-axs[0,1].set_title('-DX')
-axs[1,0].set_title('+DY')
-axs[1,1].set_title('-DY')
-
-for i in [[0,0], [0,1], [1,0], [1,1]]:
-    axs[i[0],i[1]].set_ylabel('Gain')
-    axs[i[0],i[1]].set_xlabel('# Counts')
-    axs[i[0],i[1]].legend()
-plt.tight_layout()
+plt.legend()
 plt.show()
-print("HERE")

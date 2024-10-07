@@ -34,15 +34,15 @@ def make_data_loader(x, y, batch_size=1000):
     shuffle=True)
     return dl
 
-def generate_dataset():
+def generate_dataset(negative=True):
     y = []
     x = []
     for _ in range(0, 1000000):
         x_val = random.randrange(0, 140)
-        if random.random() > 0.5:
+        if random.random() > 0.5 and negative:
             x_val = -x_val
         y_val = random.randrange(0, 140)
-        if random.random() > 0.5:
+        if random.random() > 0.5 and negative:
             y_val = -x_val
         x.append(np.array([x_val, y_val]))
         y.append(np.abs(x[-1]))
