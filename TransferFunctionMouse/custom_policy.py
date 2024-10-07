@@ -38,10 +38,10 @@ def generate_dataset():
     y = []
     x = []
     for _ in range(0, 1000000):
-        x_val = random.randrange(0, 120)
+        x_val = random.randrange(0, 140)
         if random.random() > 0.5:
             x_val = -x_val
-        y_val = random.randrange(0, 120)
+        y_val = random.randrange(0, 140)
         if random.random() > 0.5:
             y_val = -y_val
         x.append(np.array([x_val, y_val]))

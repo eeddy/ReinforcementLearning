@@ -15,7 +15,7 @@ class TFGym(gym.Env):
         self.window_size = 750
         self.timer = None
 
-        self.observation_space = spaces.Box(low=np.array([-120, -120]), high=np.array([120, 120]), dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.array([-140, -140]), high=np.array([140, 140]), dtype=np.float32)
         
         self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([1.0, 1.0]), dtype=np.float32)
 
@@ -128,6 +128,7 @@ class TFGym(gym.Env):
             pygame.display.init()
             self.window = pygame.display.set_mode((self.window_size, self.window_size))
             self.font = pygame.font.SysFont('helvetica', 40)
+            pygame.mouse.set_visible(False)
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
