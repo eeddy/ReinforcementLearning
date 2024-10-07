@@ -6,7 +6,7 @@ from custom_policy import *
 from tf_gym import *
 
 fig, axs = plt.subplots(2,2)
-steps = [1000, 10000, 25000, 70000]
+steps = [1000, 10000, 25000, 35000, 50000]
 
 for s_i, s in enumerate(steps):
     file = 'logs/rl_model_' + str(s) + '_steps.zip'
@@ -22,7 +22,7 @@ for s_i, s in enumerate(steps):
 
     arrx = []
     arry = []
-    for i in range(0, 40):
+    for i in range(0, 140):
         arrx.append(model.predict(np.array([i,1]), deterministic=True)[0])
         arry.append(model.predict(np.array([1,i]), deterministic=True)[0])
 
@@ -33,7 +33,7 @@ for s_i, s in enumerate(steps):
 
     arrx = []
     arry = []
-    for i in range(0, 40):
+    for i in range(0, 140):
         arrx.append(model.predict(np.array([-i,1]), deterministic=True)[0])
         arry.append(model.predict(np.array([1,-i]), deterministic=True)[0])
 
@@ -48,9 +48,9 @@ axs[1,0].set_title('+DY')
 axs[1,1].set_title('-DY')
 
 for i in [[0,0], [0,1], [1,0], [1,1]]:
-    axs[*i].set_ylabel('% Max Speed')
-    axs[*i].set_xlabel('# Counts')
-    axs[*i].legend()
+    axs[i[0],i[1]].set_ylabel('Gain')
+    axs[i[0],i[1]].set_xlabel('# Counts')
+    axs[i[0],i[1]].legend()
 plt.tight_layout()
 plt.show()
 print("HERE")

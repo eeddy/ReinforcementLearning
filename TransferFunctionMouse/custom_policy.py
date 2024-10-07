@@ -43,9 +43,9 @@ def generate_dataset():
             x_val = -x_val
         y_val = random.randrange(0, 140)
         if random.random() > 0.5:
-            y_val = -y_val
+            y_val = -x_val
         x.append(np.array([x_val, y_val]))
-        y.append(np.abs(x[-1])/120)
+        y.append(np.abs(x[-1]))
     return make_data_loader(x, y), [x,y]
 
 def fit(network, tr_dl, learning_rate=1e-3, num_epochs=50, verbose=True):
@@ -70,7 +70,7 @@ def fit(network, tr_dl, learning_rate=1e-3, num_epochs=50, verbose=True):
                 loss = loss_function(output, labels)
                 loss.backward()
                 optimizer.step()
-                mse = mean_squared_error(output.detach().numpy(), labels.detach().numpy())
+                mse = mean_squared_error(output.to('cpu').detach().numpy(), labels.to('cpu').detach().numpy())
 
                 log["training_loss"] += [(epoch, loss.item())]
                 log["training_mse"] += [(epoch, mse)]

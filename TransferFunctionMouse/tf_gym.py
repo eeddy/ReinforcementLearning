@@ -15,9 +15,10 @@ class TFGym(gym.Env):
         self.window_size = 750
         self.timer = None
 
+        # Mouse and Trackpad space is around -140 to 140 - Mouse set to 3200 CPI
         self.observation_space = spaces.Box(low=np.array([-140, -140]), high=np.array([140, 140]), dtype=np.float32)
         
-        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([1.0, 1.0]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([140.0, 140.0]), dtype=np.float32)
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -50,7 +51,7 @@ class TFGym(gym.Env):
 
     def step(self, action):
         velocity = action 
-        direction = np.array([self._dx  * self.speed, self._dy * -1  * self.speed]) * velocity
+        direction = np.array([self._dx  * self.speed, self._dy * self.speed]) * velocity
 
         # Make sure the agent doesn't leave the screen 
         self._agent_location = np.clip(
@@ -71,8 +72,8 @@ class TFGym(gym.Env):
         new_dist = math.dist(self._agent_location, self._target_location)
 
         if terminated:
-            reward = 1 
-        elif self._last_dist <= math.dist(self._agent_location, self._target_location):
+            reward = 1
+        elif self._last_dist <= math.dist(self._agent_location, self._target_location) and not self._in_circle():
             reward = -0.1
         else:
             reward = 0.1
@@ -126,7 +127,7 @@ class TFGym(gym.Env):
         if self.window is None and self.render_mode == "human":
             pygame.init()
             pygame.display.init()
-            self.window = pygame.display.set_mode((self.window_size, self.window_size))
+            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) #pygame.display.set_mode((self.window_size, self.window_size))
             self.font = pygame.font.SysFont('helvetica', 40)
             pygame.mouse.set_visible(False)
         if self.clock is None and self.render_mode == "human":
