@@ -5,14 +5,16 @@ import pickle
 import os
 import socket
 import numpy as np
+import random
 from stable_baselines3 import PPO
 
 class FittsLawTest:
     def __init__(self, num_circles=30, num_trials=15, savefile="out.pkl", logging=True, width=1250, height=750, small_rad=50, big_rad=50, vel=1, transfer_function=0):
         pygame.init()
         self.font = pygame.font.SysFont('helvetica', 40)
-        self.screen = pygame.display.set_mode([width, height])
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
+        pygame.mouse.set_visible(False) 
         
         # logging information
         self.log_dictionary = {
@@ -55,7 +57,8 @@ class FittsLawTest:
         self.get_new_goal_circle()
 
         # Socket for reading EMG
-        self.model = np.load('transfer_func.npy')
+        self.modelx = np.load('transfer_func_x.npy')
+        self.modely = np.load('transfer_func_y.npy')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(0.01) 
         self.sock.bind(('127.0.0.1', 12345))
@@ -159,8 +162,10 @@ class FittsLawTest:
 
             if self.transfer_function == 2:
                 # Transfer Function
-                x = self.model[np.abs(x)] * (x / np.abs(x))
-                y = self.model[np.abs(y)] * (y / np.abs(y))
+                if x > 0:
+                    x = self.modelx[np.abs(x)] * (x / np.abs(x))
+                if y > 0:
+                    y = self.modely[np.abs(y)] * (y / np.abs(y))
 
         # Making sure its within the bounds of the screen
         if self.cursor.x + x > 0 + self.cursor_size//2 and self.cursor.x + x + self.cursor_size//2 < self.width:
@@ -218,7 +223,9 @@ IDS = [
     [150, 30],
     [310, 10],
 ]
-tf = 0
 
-for i, id in enumerate(IDS):
-    FittsLawTest(big_rad=id[0], small_rad=id[1], savefile='t_' + str(tf) + '_' + str(i) + '.pkl', num_circles=8, transfer_function=tf).run()
+tfs = [1,2]
+random.shuffle(tfs)
+for tf in tfs:
+    for i, id in enumerate(IDS):
+        FittsLawTest(big_rad=id[0], small_rad=id[1], savefile='t_' + str(tf) + '_' + str(i) + '.pkl', num_circles=8, transfer_function=tf).run()

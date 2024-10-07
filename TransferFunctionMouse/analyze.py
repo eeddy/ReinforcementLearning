@@ -6,8 +6,8 @@ from custom_policy import *
 from itertools import combinations
 from tf_gym import *
 
-# fig, axs = plt.subplots(2,2)
-steps = [1000, 10000, 25000, 35000, 50000, 57000]
+fig, axs = plt.subplots(2)
+steps = [5000, 25000, 50000, 75000]
 
 for s_i, s in enumerate(steps):
     file = 'logs/rl_model_' + str(s) + '_steps.zip'
@@ -30,11 +30,20 @@ for s_i, s in enumerate(steps):
     arrx = np.array(arrx)
     arry = np.array(arry)
 
-    tf = np.mean([arrx[:,0], arry[:,1]], axis=0)
-    plt.plot(tf,  label=s, linewidth=3)
+    axs[0].plot(arrx[:,0],  label=s, linewidth=3)
+    axs[1].plot(arry[:,1],  label=s, linewidth=3)
 
     if s_i == len(steps)-1:
-        np.save('transfer_func.npy', tf)
+        np.save('transfer_func_x.npy', arrx[:,0])
+        np.save('transfer_func_y.npy', arry[:,1])
 
-plt.legend()
+axs[0].set_xlabel('Counts')
+axs[1].set_xlabel('Counts')
+axs[0].set_ylabel('Gain')
+axs[1].set_ylabel('Gain')
+axs[0].set_title('DX')
+axs[1].set_title('DY')
+axs[0].legend()
+axs[1].legend()
+plt.tight_layout()
 plt.show()

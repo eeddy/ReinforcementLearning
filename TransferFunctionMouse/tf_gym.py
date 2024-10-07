@@ -12,7 +12,7 @@ class TFGym(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 60}
 
     def __init__(self, render_mode=None):
-        self.window_size = 750
+        self.window_size = 1000
         self.timer = None
 
         # Mouse and Trackpad space is around -140 to 140 - Mouse set to 3200 CPI

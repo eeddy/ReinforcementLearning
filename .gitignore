@@ -8,3 +8,4 @@ Images/*
 .vscode/
 TransferFunctionMouse/__pycache__/
 results/*
+*.npy

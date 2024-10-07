@@ -6,7 +6,7 @@ from custom_policy import *
 
 # Save a checkpoint every 1000 steps
 checkpoint_callback = CheckpointCallback(
-  save_freq=1000,
+  save_freq=5000,
   save_path="./logs/",
   name_prefix="rl_model",
   save_replay_buffer=True,
