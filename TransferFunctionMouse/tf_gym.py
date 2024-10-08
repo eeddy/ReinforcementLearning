@@ -15,17 +15,19 @@ class TFGym(gym.Env):
         self.window_size = 1000
         self.timer = None
 
+        # PPI = 109 = 430 pixels (per meter)
+        self.PPI = 430
+
         # Mouse and Trackpad space is around -140 to 140 - Mouse set to 3200 CPI
-        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([140, 140]), dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([1, 1]), dtype=np.float32)
         
-        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([140.0, 140.0]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([5, 5]), dtype=np.float32) # Gain (speed multiplier)
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
         self.window = None
         self.clock = None # We can figure it out later 
-        self.speed = 1
         self.fps = 60
 
         # Default parameters for ISO Fitts 
@@ -50,8 +52,8 @@ class TFGym(gym.Env):
         self.sock.bind(('127.0.0.1', 12345))
 
     def step(self, action):
-        velocity = action 
-        direction = np.array([self._dx  * self.speed, self._dy * self.speed]) * velocity
+        velocity = action
+        direction = np.array([self._dx, self._dy]) * velocity * self.PPI
 
         # Make sure the agent doesn't leave the screen 
         self._agent_location = np.clip(

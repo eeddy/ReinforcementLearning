@@ -8,9 +8,11 @@ from torch import nn
 from sklearn.metrics import mean_squared_error
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
-
 from stable_baselines3 import PPO
 from stable_baselines3.common.policies import ActorCriticPolicy
+
+def convert_to_speed(val, dpi=3200, refresh=125):
+    return val/dpi * 0.0254 * refresh # 0.0254 is inches to meter
 
 class DL_input_data(Dataset):
     def __init__(self, x, y):
@@ -37,15 +39,15 @@ def make_data_loader(x, y, batch_size=1000):
 def generate_dataset(negative=True):
     y = []
     x = []
-    for _ in range(0, 1000000):
-        x_val = random.randrange(0, 140)
+    for _ in range(0, 100000):
+        x_val = convert_to_speed(random.randrange(0,140))
         if random.random() > 0.5 and negative:
             x_val = -x_val
-        y_val = random.randrange(0, 140)
+        y_val = convert_to_speed(random.randrange(0,140))
         if random.random() > 0.5 and negative:
             y_val = -x_val
         x.append(np.array([x_val, y_val]))
-        y.append(np.abs(x[-1]))
+        y.append(np.array([1,1]))
     return make_data_loader(x, y), [x,y]
 
 def fit(network, tr_dl, learning_rate=1e-3, num_epochs=50, verbose=True):

@@ -16,7 +16,7 @@ env = TFGym('human')
 
 model = PPO('MlpPolicy', env, verbose=1)
 ds, data = generate_dataset(negative=False)
-fit(model.policy, ds, num_epochs=10)
+fit(model.policy, ds, num_epochs=5)
 model.learn(total_timesteps=100_000, callback=checkpoint_callback, log_interval=10_000)
 
 # model = PPO.load('logs/rl_model_60000_steps.zip')

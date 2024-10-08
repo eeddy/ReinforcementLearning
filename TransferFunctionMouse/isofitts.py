@@ -15,6 +15,8 @@ class FittsLawTest:
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         pygame.mouse.set_visible(False) 
+        # PPI = 109 = 430 pixels (per meter)
+
         
         # logging information
         self.log_dictionary = {
@@ -34,6 +36,7 @@ class FittsLawTest:
         self.big_rad   = big_rad
         self.pos_factor1 = self.big_rad/2
         self.pos_factor2 = (self.big_rad * math.sqrt(3))//2
+        self.PPI = 430
 
         self.done = False
         self.dwell_time = 0.5
@@ -57,8 +60,7 @@ class FittsLawTest:
         self.get_new_goal_circle()
 
         # Socket for reading EMG
-        self.modelx = np.load('transfer_func_x.npy')
-        self.modely = np.load('transfer_func_y.npy')
+        self.model = PPO.load('transfer_func.zip')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(0.01) 
         self.sock.bind(('127.0.0.1', 12345))
@@ -157,24 +159,24 @@ class FittsLawTest:
 
             data = str(data.decode("utf-8"))
             if data:
-                x = int(data.split(' ')[0])
-                y = int(data.split(' ')[1])
+                x = float(data.split(' ')[0])
+                y = float(data.split(' ')[1])
 
             if self.transfer_function == 2:
                 # Transfer Function
+                preds, _ = self.model.predict(np.abs(np.array([x,y])))
                 if x > 0:
-                    x = self.modelx[np.abs(x)] * (x / np.abs(x))
+                    x = preds[0] * x
                 if y > 0:
-                    y = self.modely[np.abs(y)] * (y / np.abs(y))
+                    y = preds[1] * y
 
         # Making sure its within the bounds of the screen
-        if self.cursor.x + x > 0 + self.cursor_size//2 and self.cursor.x + x + self.cursor_size//2 < self.width:
-            self.cursor.x += x
-        if self.cursor.y + y > 0 + self.cursor_size//2 and self.cursor.y + y + self.cursor_size//2 < self.height:
-            self.cursor.y += y
+        if self.cursor.x + x * self.PPI > 0 + self.cursor_size//2 and self.cursor.x + x * self.PPI + self.cursor_size//2 < self.width:
+            self.cursor.x += x * self.PPI
+        if self.cursor.y + y * self.PPI > 0 + self.cursor_size//2 and self.cursor.y + y * self.PPI + self.cursor_size//2 < self.height:
+            self.cursor.y += y * self.PPI
 
         
-    
     def get_new_goal_circle(self):
         if self.goal_circle == -1:
             self.goal_circle = 0

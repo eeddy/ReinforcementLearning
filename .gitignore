@@ -9,3 +9,4 @@ Images/*
 TransferFunctionMouse/__pycache__/
 results/*
 *.npy
+*.zip
