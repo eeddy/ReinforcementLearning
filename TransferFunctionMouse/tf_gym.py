@@ -15,13 +15,10 @@ class TFGym(gym.Env):
         self.window_size = 1000
         self.timer = None
 
-        # PPI = 109 = 430 pixels (per meter)
-        self.PPI = 430
-
         # Mouse and Trackpad space is around -140 to 140 - Mouse set to 3200 CPI
-        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([1, 1]), dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([140, 140]), dtype=np.float32) # Observations: # of counts 
         
-        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([5, 5]), dtype=np.float32) # Gain (speed multiplier)
+        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([500, 500]), dtype=np.float32) # Action Space = # of Pixels to Move 
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -52,8 +49,7 @@ class TFGym(gym.Env):
         self.sock.bind(('127.0.0.1', 12345))
 
     def step(self, action):
-        velocity = action
-        direction = np.array([self._dx, self._dy]) * velocity * self.PPI
+        direction = action * np.array([self.negative(self._dx), self.negative(self._dy)])
 
         # Make sure the agent doesn't leave the screen 
         self._agent_location = np.clip(
@@ -75,7 +71,7 @@ class TFGym(gym.Env):
 
         if terminated:
             reward = 1
-        elif self._last_dist <= math.dist(self._agent_location, self._target_location) and not self._in_circle():
+        elif self._last_dist <= math.dist(self._agent_location, self._target_location):
             reward = -0.1
         else:
             reward = 0.1
@@ -90,7 +86,7 @@ class TFGym(gym.Env):
 
         return observation, reward, terminated, False, info
 
-    def reset(self, seed=None, options=None):
+    def reset(self, seed=None):
         super().reset(seed=seed)
 
         # Randomly place the circle 
@@ -169,8 +165,12 @@ class TFGym(gym.Env):
                 self._dx = 0 
                 self._dy = 0
 
-    
     def close(self):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
+
+    def negative(self, x):
+        if x < 0:
+            return -1 
+        return 1

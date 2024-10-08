@@ -11,9 +11,6 @@ from torch.utils.data import DataLoader, Dataset
 from stable_baselines3 import PPO
 from stable_baselines3.common.policies import ActorCriticPolicy
 
-def convert_to_speed(val, dpi=3200, refresh=125):
-    return val/dpi * 0.0254 * refresh # 0.0254 is inches to meter
-
 class DL_input_data(Dataset):
     def __init__(self, x, y):
         self.x = th.tensor(x, dtype=th.float32)
@@ -39,15 +36,15 @@ def make_data_loader(x, y, batch_size=1000):
 def generate_dataset(negative=True):
     y = []
     x = []
-    for _ in range(0, 100000):
-        x_val = convert_to_speed(random.randrange(0,140))
+    for _ in range(0, 1000000):
+        x_val = random.randrange(0,140)
         if random.random() > 0.5 and negative:
             x_val = -x_val
-        y_val = convert_to_speed(random.randrange(0,140))
+        y_val = random.randrange(0,140)
         if random.random() > 0.5 and negative:
             y_val = -x_val
         x.append(np.array([x_val, y_val]))
-        y.append(np.array([1,1]))
+        y.append(x[-1])
     return make_data_loader(x, y), [x,y]
 
 def fit(network, tr_dl, learning_rate=1e-3, num_epochs=50, verbose=True):
@@ -82,79 +79,3 @@ def fit(network, tr_dl, learning_rate=1e-3, num_epochs=50, verbose=True):
                 print(f"{epoch}: trloss:{epoch_trloss:.2f}  trmse:{epoch_tracc:.2f}")
         network.eval()
         return network
-
-class CustomNetwork(nn.Module):
-    """
-    Custom network for policy and value function.
-    It receives as input the features extracted by the features extractor.
-
-    :param feature_dim: dimension of the features extracted with the features_extractor (e.g. features from a CNN)
-    :param last_layer_dim_pi: (int) number of units for the last layer of the policy network
-    :param last_layer_dim_vf: (int) number of units for the last layer of the value network
-    """
-
-    def __init__(
-        self,
-        feature_dim: int,
-        last_layer_dim_pi: int = 64,
-        last_layer_dim_vf: int = 64,
-    ):
-        super().__init__()
-
-        # IMPORTANT:
-        # Save output dimensions, used to create the distributions
-        self.latent_dim_pi = last_layer_dim_pi
-        self.latent_dim_vf = last_layer_dim_vf
-
-        # Policy network
-        self.policy_net = nn.Sequential(
-            nn.Linear(feature_dim, last_layer_dim_vf), nn.ReLU(),
-        )
-        # Train my polciy network to produce y=x
-        # print('Training Policy Network')
-        # dl = generate_dataset()
-        # fit(self.policy_net, dl, learning_rate=1e-3)
-        # print('Pre-trained Policy')
-
-
-        # Value network
-        self.value_net = nn.Sequential(
-            nn.Linear(feature_dim, last_layer_dim_vf), nn.ReLU(),
-        )
-
-    def forward(self, features: th.Tensor) -> Tuple[th.Tensor, th.Tensor]:
-        """
-        :return: (th.Tensor, th.Tensor) latent_policy, latent_value of the specified network.
-            If all layers are shared, then ``latent_policy == latent_value``
-        """
-        return self.forward_actor(features), self.forward_critic(features)
-
-    def forward_actor(self, features: th.Tensor) -> th.Tensor:
-        return self.policy_net(features)
-
-    def forward_critic(self, features: th.Tensor) -> th.Tensor:
-        return self.value_net(features)
-
-
-class CustomActorCriticPolicy(ActorCriticPolicy):
-    def __init__(
-        self,
-        observation_space: spaces.Space,
-        action_space: spaces.Space,
-        lr_schedule: Callable[[float], float],
-        *args,
-        **kwargs,
-    ):
-        # Disable orthogonal initialization
-        kwargs["ortho_init"] = False
-        super().__init__(
-            observation_space,
-            action_space,
-            lr_schedule,
-            # Pass remaining arguments to base class
-            *args,
-            **kwargs,
-        )
-
-    def _build_mlp_extractor(self) -> None:
-        self.mlp_extractor = CustomNetwork(self.features_dim)
