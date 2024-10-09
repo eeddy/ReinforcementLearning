@@ -37,10 +37,13 @@ def generate_dataset(min, max, func, samples=100000):
     y = []
     x = []
     for _ in range(0, samples):
-        x_val = random.randrange(min, max)
+        x_val = random.randrange(min, max) # TODO: Fix this so that it works with any input size
         y_val = random.randrange(min, max)
-        x.append(np.array([x_val, y_val]))
+        x.append(np.array([x_val]))
         y.append(func(x[-1]))
+    import matplotlib.pyplot as plt
+    plt.plot(x, y)
+    plt.show()
     return make_data_loader(x, y)
 
 def fit(network, tr_dl, learning_rate=1e-3, num_epochs=50, verbose=True):

@@ -28,8 +28,8 @@ for s_i, s in enumerate(steps):
     arry = []
     x = []
     for i in range(0, 140):
-        arrx.append(model.predict(np.array([i,10]), deterministic=True)[0] * i)
-        arry.append(model.predict(np.array([10,i]), deterministic=True)[0] * i)
+        arrx.append(model.predict(np.array([i,0]), deterministic=True)[0])
+        arry.append(model.predict(np.array([0,i]), deterministic=True)[0])
         x.append(i)
     
     arrx = np.array(arrx)

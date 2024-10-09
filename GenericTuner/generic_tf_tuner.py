@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from tf_gym import *
+from tf_gym_emg import * 
 import socket
 import torch as th
 from pretraining import *
@@ -41,11 +42,12 @@ class TFEnvironment:
     save_path:  where to save the model.
     """
     
-    def __init__(self, device, actions, pretrain=None, timesteps=50000, save_freq=1000, save_path=None):
+    def __init__(self, device, actions, pretrain=None, timesteps=50000, save_freq=1000, save_path=None, emg=False):
         self.device = device 
         self.actions = actions 
         self.pretrain = pretrain 
         self.timesteps = timesteps
+        self.emg = emg
 
         if save_path == None:
             save_path = './logs/' + self.device.name
@@ -70,7 +72,11 @@ class TFEnvironment:
         if evaluate is not None:
             print("Starting in evaluation mode!")
             model = PPO.load(evaluate)
-            env = TFGym(obs_space, act_space)
+            # Start training PPO 
+            if self.emg:
+                env = TFGymEMG(obs_space, act_space)
+            else:
+                env = TFGym(obs_space, act_space)
 
             obs, _ = env.reset()
             while True:
@@ -80,7 +86,10 @@ class TFEnvironment:
                     obs, _ = env.reset()
         else:
             # Start training PPO 
-            env = TFGym(obs_space, act_space)
+            if self.emg:
+                env = TFGymEMG(obs_space, act_space)
+            else:
+                env = TFGym(obs_space, act_space)
 
             policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=dict(pi=[32, 16], vf=[32, 16]))
 
