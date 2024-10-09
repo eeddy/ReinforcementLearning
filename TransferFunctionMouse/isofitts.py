@@ -15,8 +15,6 @@ class FittsLawTest:
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         pygame.mouse.set_visible(False) 
-        # PPI = 109 = 430 pixels (per meter)
-
         
         # logging information
         self.log_dictionary = {
@@ -36,7 +34,6 @@ class FittsLawTest:
         self.big_rad   = big_rad
         self.pos_factor1 = self.big_rad/2
         self.pos_factor2 = (self.big_rad * math.sqrt(3))//2
-        self.PPI = 430
 
         self.done = False
         self.dwell_time = 0.5
@@ -44,14 +41,19 @@ class FittsLawTest:
         self.max_trial = num_trials
         self.width = width
         self.height = height
-        self.fps = 120
+        self.fps = 60
+        self.duration = 0
         self.savefile = savefile
         self.logging = logging
         self.trial = 0
         self.cursor_size = 14
         self.vel = vel 
         self.dwell_timer = None
+        self.acquired_target = False
         self.transfer_function = transfer_function # 0 = normal mouse, 1 = constant, 2 = RL 
+
+        self.time_since_render = 0
+        self.clock = pygame.time.Clock()
 
         # interface objects
         self.circles = []
@@ -60,9 +62,10 @@ class FittsLawTest:
         self.get_new_goal_circle()
 
         # Socket for reading EMG
-        self.model = PPO.load('transfer_func.zip')
+        self.modelx = np.load('transfer_func_x.npy')
+        self.modely = np.load('transfer_func_y.npy')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(0.01) 
+        self.sock.settimeout(1/self.fps) 
         self.sock.bind(('127.0.0.1', 12345))
 
     def draw(self):
@@ -91,7 +94,7 @@ class FittsLawTest:
     def draw_timer(self):
         if hasattr(self, 'dwell_timer'):
             if self.dwell_timer is not None:
-                toc = time.perf_counter()
+                toc = time.time()
                 duration = round((toc-self.dwell_timer),2)
                 time_str = str(duration)
                 draw_text = self.font.render(time_str, 1, self.BLUE)
@@ -108,11 +111,8 @@ class FittsLawTest:
     def check_collisions(self):
         circle = self.circles[self.goal_circle]
         if math.sqrt((circle.centerx - self.cursor.centerx)**2 + (circle.centery - self.cursor.centery)**2) < (circle[2]/2 + self.cursor[2]/2):
-            pygame.event.post(pygame.event.Event(pygame.USEREVENT + self.goal_circle))
-            self.Event_Flag = True
-        else:
-            pygame.event.post(pygame.event.Event(pygame.USEREVENT + self.num_of_circles))
-            self.Event_Flag = False
+            return True
+        return False
 
     def check_events(self):
         # closing window
@@ -126,29 +126,27 @@ class FittsLawTest:
             self.cursor.x = mouse[0]
             self.cursor.y = mouse[1]
         
-        try:
-            ## CHECKING FOR COLLISION BETWEEN CURSOR AND RECTANGLES
-            if event.type >= pygame.USEREVENT and event.type < pygame.USEREVENT + self.num_of_circles:
-                if self.dwell_timer is None:
-                    self.dwell_timer = time.perf_counter()
+        if self.check_collisions():
+            if self.dwell_timer is None:
+                self.dwell_timer = time.time()
+            else:
+                toc = time.time()
+                self.duration = round((toc - self.dwell_timer), 2)
+
+            if self.duration >= self.dwell_time:
+                self.get_new_goal_circle()
+                self.dwell_timer = None
+                if self.trial < self.max_trial-1: # -1 because max_trial is 1 indexed
+                    self.trial += 1
                 else:
-                    toc = time.perf_counter()
-                    self.duration = round((toc - self.dwell_timer), 2)
-                if self.duration >= self.dwell_time:
-                    self.get_new_goal_circle()
-                    self.dwell_timer = None
-                    if self.trial < self.max_trial-1: # -1 because max_trial is 1 indexed
-                        self.trial += 1
-                    else:
-                        if self.logging:
-                            self.save_log()
-                        self.done = True
-            elif event.type == pygame.USEREVENT + self.num_of_circles:
-                if self.Event_Flag == False:
-                    self.dwell_timer = None
-                    self.duration = 0
-        except:
-            pass
+                    if self.logging:
+                        self.save_log()
+                    self.done = True
+                self.duration = 0
+        else:
+            self.duration = 0
+            self.dwell_timer = None
+            
 
     def move(self, x=None, y=None):
         if x == None and y == None:
@@ -159,22 +157,18 @@ class FittsLawTest:
 
             data = str(data.decode("utf-8"))
             if data:
-                x = float(data.split(' ')[0])
-                y = float(data.split(' ')[1])
+                x = int(data.split(' ')[0])
+                y = int(data.split(' ')[1])
 
             if self.transfer_function == 2:
-                # Transfer Function
-                preds, _ = self.model.predict(np.abs(np.array([x,y])))
-                if x > 0:
-                    x = preds[0] * x
-                if y > 0:
-                    y = preds[1] * y
+                x = self.modelx[np.abs(x)] * x 
+                y = self.modely[np.abs(y)] * y 
 
         # Making sure its within the bounds of the screen
-        if self.cursor.x + x * self.PPI > 0 + self.cursor_size//2 and self.cursor.x + x * self.PPI + self.cursor_size//2 < self.width:
-            self.cursor.x += x * self.PPI
-        if self.cursor.y + y * self.PPI > 0 + self.cursor_size//2 and self.cursor.y + y * self.PPI + self.cursor_size//2 < self.height:
-            self.cursor.y += y * self.PPI
+        if self.cursor.x + x > 0 + self.cursor_size//2 and self.cursor.x + x + self.cursor_size//2 < self.width:
+            self.cursor.x += x 
+        if self.cursor.y + y  > 0 + self.cursor_size//2 and self.cursor.y + y + self.cursor_size//2 < self.height:
+            self.cursor.y += y
 
         
     def get_new_goal_circle(self):
@@ -208,12 +202,14 @@ class FittsLawTest:
 
     def run(self):
         while not self.done:
-            # updated frequently for graphics & gameplay
             if self.transfer_function == 1 or self.transfer_function == 2:
                 self.move()
             self.update_game()
-            self.log()
-            pygame.display.update()
+            # Render Screen ---> Something wonky going on here that I need to figure out .
+            if time.time() - self.time_since_render >= 1/self.fps:
+                self.log()
+                pygame.display.update()
+                self.time_since_render = time.time()
             if self.transfer_function == 0:
                 self.clock.tick(self.fps)
         self.sock.close()

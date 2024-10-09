@@ -36,7 +36,7 @@ def make_data_loader(x, y, batch_size=1000):
 def generate_dataset(negative=True):
     y = []
     x = []
-    for _ in range(0, 1000000):
+    for _ in range(0, 100000):
         x_val = random.randrange(0,140)
         if random.random() > 0.5 and negative:
             x_val = -x_val
@@ -44,7 +44,7 @@ def generate_dataset(negative=True):
         if random.random() > 0.5 and negative:
             y_val = -x_val
         x.append(np.array([x_val, y_val]))
-        y.append(x[-1])
+        y.append(np.array([1,1]))
     return make_data_loader(x, y), [x,y]
 
 def fit(network, tr_dl, learning_rate=1e-3, num_epochs=50, verbose=True):

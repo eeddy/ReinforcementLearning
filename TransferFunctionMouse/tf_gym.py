@@ -18,7 +18,7 @@ class TFGym(gym.Env):
         # Mouse and Trackpad space is around -140 to 140 - Mouse set to 3200 CPI
         self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([140, 140]), dtype=np.float32) # Observations: # of counts 
         
-        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([500, 500]), dtype=np.float32) # Action Space = # of Pixels to Move 
+        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([5, 5]), dtype=np.float32) # Action Space = speed multiplier
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -37,19 +37,22 @@ class TFGym(gym.Env):
         self.cursor = None 
         self.target = None 
         self.current_target_size = randrange(self.cursor_size, self.max_target_size)
+        self.start_time = time.time()
+        self.og_distance = 0
 
         self._last_dist = 1000000 
         self._dx = 0
         self._dy = 0
 
         self.time_since_render = 0
+        self.rewards = [0]
         
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(1/self.fps) 
         self.sock.bind(('127.0.0.1', 12345))
 
     def step(self, action):
-        direction = action * np.array([self.negative(self._dx), self.negative(self._dy)])
+        direction = action * np.array([self._dx, self._dy])
 
         # Make sure the agent doesn't leave the screen 
         self._agent_location = np.clip(
@@ -61,20 +64,34 @@ class TFGym(gym.Env):
             if self.timer is None:
                 self.timer = time.time()
             elif time.time() - self.timer >= 1:
+                throughput = math.log2(self.og_distance/self.current_target_size + 1)/(time.time() - self.start_time - 1)
                 terminated = True
                 self.timer = None
                 self.current_target_size = randrange(self.cursor_size, self.max_target_size)
+                self.start_time = time.time()
+                self.og_distance = math.dist(self._agent_location, self._target_location)
         else:
             self.timer = None
 
         new_dist = math.dist(self._agent_location, self._target_location)
 
         if terminated:
-            reward = 1
-        elif self._last_dist <= math.dist(self._agent_location, self._target_location):
-            reward = -0.1
-        else:
-            reward = 0.1
+            reward = throughput# It is a function of throughput  
+        elif not self._in_circle():
+            reward = -0.01
+        else: 
+            reward = 0 
+        # elif self._last_dist <= math.dist(self._agent_location, self._target_location) and not self._in_circle():
+        #     reward = -0.1 # Punishing any movement away from target 
+        # elif self._in_circle() and self._last_dist != math.dist(self._agent_location, self._target_location):
+        #     reward = -0.05 # Punishing movement in circle 
+        # else:
+        #     reward = 0.1
+        
+        self.rewards[-1] += reward
+        if terminated:
+            self.rewards.append(0)
+            np.save('rewards.npy', self.rewards)
 
         observation = self._get_obs()
         info = self._get_info()
@@ -169,8 +186,3 @@ class TFGym(gym.Env):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
-
-    def negative(self, x):
-        if x < 0:
-            return -1 
-        return 1
