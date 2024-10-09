@@ -59,26 +59,39 @@ class TFEnvironment:
             save_vecnormalize=True,
         )
     
-    def run(self):
+    def run(self, evaluate=None):
         # Start streaming from device 
         p = Process(target=self.device.run)
         p.start()
 
-        # Start training PPO 
         obs_space = spaces.Box(low=self.device.low, high=self.device.high, shape=(self.device.in_shape,), dtype=np.float32)
         act_space = spaces.Box(low=self.actions['low'], high=self.actions['high'], shape=(self.device.out_shape,), dtype=np.float32)
-        env = TFGym(obs_space, act_space)
 
-        policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=dict(pi=[32, 16], vf=[32, 16]))
+        if evaluate is not None:
+            print("Starting in evaluation mode!")
+            model = PPO.load(evaluate)
+            env = TFGym(obs_space, act_space)
 
-        model = PPO('MlpPolicy', env, verbose=1, policy_kwargs=policy_kwargs)
+            obs, _ = env.reset()
+            while True:
+                action, _ = model.predict(obs, deterministic=True)
+                obs, _, terminated, _, _ = env.step(action)
+                if terminated:
+                    obs, _ = env.reset()
+        else:
+            # Start training PPO 
+            env = TFGym(obs_space, act_space)
 
-        # Check if we need to pretrain 
-        if self.pretrain is not None:
-            ds = generate_dataset(self.device.low, self.device.high, self.pretrain['func'], self.pretrain['samples'])
-            fit(model.policy, ds, num_epochs=self.pretrain['epochs'])
+            policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=dict(pi=[32, 16], vf=[32, 16]))
 
-        model.learn(total_timesteps=50_000, callback=self.checkpoint_callback, log_interval=10_000)
+            model = PPO('MlpPolicy', env, verbose=1, policy_kwargs=policy_kwargs)
+
+            # Check if we need to pretrain 
+            if self.pretrain is not None:
+                ds = generate_dataset(self.device.low, self.device.high, self.pretrain['func'], self.pretrain['samples'])
+                fit(model.policy, ds, num_epochs=self.pretrain['epochs'])
+
+            model.learn(total_timesteps=self.timesteps, callback=self.checkpoint_callback, log_interval=10_000)
 
 
 

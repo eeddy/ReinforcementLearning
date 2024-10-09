@@ -60,25 +60,23 @@ class TFGym(gym.Env):
         if self._in_circle():
             if self.timer is None:
                 self.timer = time.time()
-            elif time.time() - self.timer >= 1:
-                throughput = math.log2(self.og_distance/self.current_target_size + 1)/(time.time() - self.start_time - 1)
+            elif time.time() - self.timer >= 0.5:
+                throughput = math.log2(self.og_distance/self.current_target_size + 1)/(time.time() - self.start_time - 0.5)
                 terminated = True
                 self.timer = None
                 self.current_target_size = randrange(self.cursor_size, self.max_target_size)
-                self.start_time = time.time()
-                self.og_distance = math.dist(self._agent_location, self._target_location)
         else:
             self.timer = None
 
 
         if terminated:
             reward = throughput # It is a function of throughput  
-        else:
-            reward = 0
-        # elif not self._in_circle():
-        #     reward = -0.01
-        # else: 
-        #     reward = 0 
+        elif not self._in_circle():
+            reward = -0.1
+        elif self._in_circle():
+            reward = 0.1
+        else: 
+            reward = 0 
         
         self.rewards[-1] += reward
         if terminated:
@@ -98,6 +96,9 @@ class TFGym(gym.Env):
         # Randomly place the circle 
         self._agent_location = np.array([randrange(0, self.w-self.cursor_size*2), randrange(0, self.h-self.cursor_size*2)])
         self._target_location = np.array([randrange(0, self.w-self.current_target_size*2), randrange(0, self.h-self.current_target_size*2)])
+
+        self.start_time = time.time()
+        self.og_distance = math.dist(self._agent_location, self._target_location)
 
         observation = self._get_obs()
         info = self._get_info()

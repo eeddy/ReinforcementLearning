@@ -1,6 +1,5 @@
 from generic_tf_tuner import *
 from libpointing import PointingDevice
-from libpointing import PointingDeviceManager
 import sys
 
 class Mouse(InputDevice):
@@ -18,13 +17,13 @@ class Mouse(InputDevice):
         self.sock.sendto(bytes(message, "utf-8"), ('127.0.0.1', self.port))
         sys.stdout.flush()
 
-def p_func(x):
-    return np.array([4,4])
+def p_func(_):
+    return np.array([1,1])
 
 actions = {'low': 0, 'high': 20}
 pretrain = {'func': p_func, 'epochs': 10, 'samples': 100000}
 
 if __name__ == "__main__":
     mouse = Mouse()
-    tuner = TFEnvironment(mouse, actions, pretrain)
-    tuner.run()
+    tuner = TFEnvironment(mouse, actions, pretrain, timesteps=20000)
+    tuner.run('logs\mouse\mouse_17000_steps.zip')
