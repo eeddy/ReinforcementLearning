@@ -18,18 +18,18 @@ plt.ylabel('Throughput (bits/s)')
 plt.show()
 
 fig, axs = plt.subplots(2)
-steps = [1000, 10000, 20000, 40000]
+steps = [1000, 2000, 5000]
 
 for s_i, s in enumerate(steps):
-    file = 'logs/rl_model_' + str(s) + '_steps.zip'
+    file = 'logs/mouse/mouse_' + str(s) + '_steps.zip'
     model = PPO.load(file)
 
     arrx = []
     arry = []
     x = []
     for i in range(0, 140):
-        arrx.append(model.predict(np.array([i,0]), deterministic=True)[0])
-        arry.append(model.predict(np.array([0,i]), deterministic=True)[0])
+        arrx.append(model.predict(np.array([i,0]), deterministic=True)[0] * i)
+        arry.append(model.predict(np.array([0,i]), deterministic=True)[0] * i)
         x.append(i)
     
     arrx = np.array(arrx)
