@@ -6,7 +6,7 @@ from custom_policy import *
 from itertools import combinations
 from tf_gym import *
 
-def moving_average(a, n=10):
+def moving_average(a, n=50):
     ret = np.cumsum(a, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
     return ret[n - 1:] / n
@@ -14,11 +14,11 @@ def moving_average(a, n=10):
 data = np.load('rewards.npy')
 plt.plot(moving_average(data), linewidth=4)
 plt.xlabel('Episodes')
-plt.ylabel('Throughput (bits/s)')
+plt.ylabel('Reward')
 plt.show()
 
 fig, axs = plt.subplots(2)
-steps = [1000, 5000, 10000, 15000]
+steps = [1000, 15000, 30000]
 
 for s_i, s in enumerate(steps):
     file = 'logs/mouse/mouse_' + str(s) + '_steps.zip'

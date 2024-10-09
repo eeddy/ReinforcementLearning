@@ -25,5 +25,5 @@ pretrain = {'func': p_func, 'epochs': 10, 'samples': 100000}
 
 if __name__ == "__main__":
     mouse = Mouse()
-    tuner = TFEnvironment(mouse, actions, pretrain, timesteps=20000)
-    tuner.run('logs\mouse\mouse_17000_steps.zip')
+    tuner = TFEnvironment(mouse, actions, pretrain, timesteps=40000)
+    tuner.run()

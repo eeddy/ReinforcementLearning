@@ -40,6 +40,8 @@ class TFGym(gym.Env):
         self.w = 1000
         self.h = 1000
 
+        self._last_dist = 1000000 
+
         self.time_since_render = 0
         self.rewards = [0]
         
@@ -68,15 +70,15 @@ class TFGym(gym.Env):
         else:
             self.timer = None
 
-
         if terminated:
             reward = throughput # It is a function of throughput  
-        elif not self._in_circle():
+        elif self._last_dist <= math.dist(self._agent_location, self._target_location) and not self._in_circle():
             reward = -0.1
-        elif self._in_circle():
+        else:
             reward = 0.1
-        else: 
-            reward = 0 
+        
+        self._last_dist = math.dist(self._agent_location, self._target_location)
+
         
         self.rewards[-1] += reward
         if terminated:

@@ -91,7 +91,7 @@ class TFEnvironment:
             else:
                 env = TFGym(obs_space, act_space)
 
-            policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=dict(pi=[32, 16], vf=[32, 16]))
+            policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=dict(pi=[64,64], vf=[64,64]))
 
             model = PPO('MlpPolicy', env, verbose=1, policy_kwargs=policy_kwargs)
 
