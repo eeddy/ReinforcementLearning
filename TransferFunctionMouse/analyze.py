@@ -18,7 +18,7 @@ plt.ylabel('Throughput (bits/s)')
 plt.show()
 
 fig, axs = plt.subplots(2)
-steps = [1000, 2000, 5000]
+steps = [1000, 2000, 5000, 8000]
 
 for s_i, s in enumerate(steps):
     file = 'logs/mouse/mouse_' + str(s) + '_steps.zip'

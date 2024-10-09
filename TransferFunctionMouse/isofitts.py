@@ -222,7 +222,7 @@ IDS = [
     [310, 10],
 ]
 
-tfs = [1,2]
+tfs = [2]
 random.shuffle(tfs)
 for tf in tfs:
     for i, id in enumerate(IDS):

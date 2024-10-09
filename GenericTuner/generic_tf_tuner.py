@@ -65,7 +65,9 @@ class TFEnvironment:
         p.start()
 
         # Start training PPO 
-        env = TFGym()
+        obs_space = spaces.Box(low=self.device.low, high=self.device.high, shape=(self.device.in_shape,), dtype=np.float32)
+        act_space = spaces.Box(low=self.actions['low'], high=self.actions['high'], shape=(self.device.out_shape,), dtype=np.float32)
+        env = TFGym(obs_space, act_space)
 
         policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=dict(pi=[32, 16], vf=[32, 16]))
 

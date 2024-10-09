@@ -10,3 +10,4 @@ TransferFunctionMouse/__pycache__/
 results/*
 *.npy
 *.zip
+GenericTuner/__pycache__

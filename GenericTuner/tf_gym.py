@@ -9,14 +9,13 @@ from random import randrange
 
 
 class TFGym(gym.Env):
-    def __init__(self):
-        self.window_size = 1000
+    def __init__(self, obs_space, action_space):
         self.timer = None
 
         # Mouse and Trackpad space is around -140 to 140 - Mouse set to 3200 CPI
-        self.observation_space = spaces.Box(low=np.array([0, 0]), high=np.array([140, 140]), dtype=np.float32) # Observations: # of counts 
+        self.observation_space = obs_space #spaces.Box(low=np.array([0, 0]), high=np.array([140, 140]), dtype=np.float32) # Observations: # of counts 
         
-        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([5, 5]), dtype=np.float32) # Action Space = speed multiplier
+        self.action_space = action_space #spaces.Box(low=np.array([0, 0]), high=np.array([5, 5]), dtype=np.float32) # Action Space = speed multiplier
 
         self.window = None
         self.clock = None # We can figure it out later 
@@ -38,6 +37,9 @@ class TFGym(gym.Env):
         self._dx = 0
         self._dy = 0
 
+        self.w = 1000
+        self.h = 1000
+
         self.time_since_render = 0
         self.rewards = [0]
         
@@ -49,10 +51,11 @@ class TFGym(gym.Env):
         direction = action * np.array([self._dx, self._dy])
 
         # Make sure the agent doesn't leave the screen 
-        self._agent_location = np.clip(
-            self._agent_location + direction, 0, self.window_size - 10
-        )
-
+        if self._agent_location[0] + direction[0] > 0 + self.cursor_size//2 and self._agent_location[0] + direction[0]  + self.cursor_size//2 < self.w:
+            self._agent_location[0] += direction[0]  
+        if self._agent_location[1] + direction[1] > 0 + self.cursor_size//2 and self._agent_location[1] + direction[1] + self.cursor_size//2 < self.h:
+            self._agent_location[1] += direction[1]
+            
         terminated = False
         if self._in_circle():
             if self.timer is None:
@@ -69,11 +72,13 @@ class TFGym(gym.Env):
 
 
         if terminated:
-            reward = throughput# It is a function of throughput  
-        elif not self._in_circle():
-            reward = -0.01
-        else: 
-            reward = 0 
+            reward = throughput # It is a function of throughput  
+        else:
+            reward = 0
+        # elif not self._in_circle():
+        #     reward = -0.01
+        # else: 
+        #     reward = 0 
         
         self.rewards[-1] += reward
         if terminated:
@@ -91,8 +96,8 @@ class TFGym(gym.Env):
         super().reset(seed=seed)
 
         # Randomly place the circle 
-        self._agent_location = self.np_random.integers(0, self.window_size-self.cursor_size*2, size=2, dtype=int)
-        self._target_location = self.np_random.integers(0, self.window_size-self.current_target_size*2, size=2, dtype=int)
+        self._agent_location = np.array([randrange(0, self.w-self.cursor_size*2), randrange(0, self.h-self.cursor_size*2)])
+        self._target_location = np.array([randrange(0, self.w-self.current_target_size*2), randrange(0, self.h-self.current_target_size*2)])
 
         observation = self._get_obs()
         info = self._get_info()
@@ -121,13 +126,14 @@ class TFGym(gym.Env):
         if self.window is None:
             pygame.init()
             pygame.display.init()
-            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) #pygame.display.set_mode((self.window_size, self.window_size))
+            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) 
+            self.w, self.h = pygame.display.get_surface().get_size()
             self.font = pygame.font.SysFont('helvetica', 40)
             pygame.mouse.set_visible(False)
         if self.clock is None:
             self.clock = pygame.time.Clock()
 
-        canvas = pygame.Surface((self.window_size, self.window_size))
+        canvas = pygame.Surface((self.w, self.h))
         canvas.fill((255, 255, 255))
 
         # Draw Circle 

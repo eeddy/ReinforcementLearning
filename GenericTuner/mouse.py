@@ -19,9 +19,9 @@ class Mouse(InputDevice):
         sys.stdout.flush()
 
 def p_func(x):
-    return np.array([1,1])
+    return np.array([4,4])
 
-actions = {'low': 0, 'high': 5}
+actions = {'low': 0, 'high': 20}
 pretrain = {'func': p_func, 'epochs': 10, 'samples': 100000}
 
 if __name__ == "__main__":
