@@ -48,11 +48,11 @@ class TFGymEMG(gym.Env):
         self.sock.bind(('127.0.0.1', 12346))
 
         self._action_to_direction = {
-            1: np.array([0,40]),
-            4: np.array([0,-40]),
+            1: np.array([0,50]),
+            4: np.array([0,-50]),
             0: np.array([0, 0]),
-            3: np.array([40, 0]),
-            2: np.array([-40, 0])
+            3: np.array([50, 0]),
+            2: np.array([-50, 0])
         }
 
     def step(self, action):
@@ -79,10 +79,6 @@ class TFGymEMG(gym.Env):
 
         if terminated:
             reward = throughput # It is a function of throughput  
-        elif not self._in_circle():
-            reward = -0.1
-        elif self._in_circle():
-            reward = 0.1
         else: 
             reward = 0 
         

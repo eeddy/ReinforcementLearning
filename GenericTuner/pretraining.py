@@ -40,7 +40,7 @@ def generate_dataset(min, max, func, samples=100000):
     for _ in range(0, samples):
         x_val = random.randrange(min, max)
         y_val = random.randrange(min, max)
-        x.append(np.array([x_val, y_val]))
+        x.append(np.array([x_val]))
         y.append(func(x[-1]))
     return make_data_loader(x, y)
 

@@ -21,11 +21,11 @@ class EMG(InputDevice):
         o_classifier.run(block=True)
 
 
-actions = {'low': 0, 'high': 10}
+actions = {'low': 0, 'high': 20}
 
 def p_func(x):
     # Creating Linear Function 
-    return x/128
+    return x/100 # We will never get to 100% MAV
 
 if __name__ == "__main__":
     actions = {'low': 0, 'high': 5}
@@ -33,4 +33,4 @@ if __name__ == "__main__":
 
     mouse = EMG()
     tuner = TFEnvironment(mouse, actions, pretrain=pretrain, timesteps=20000, emg=True)
-    tuner.run('logs/emg/emg_15000_steps.zip')
+    tuner.run('logs\emg\emg_8000_steps.zip')

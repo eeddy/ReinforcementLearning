@@ -33,6 +33,7 @@ for s_i, s in enumerate(steps):
     for i in range(0, 40):
         arrx.append(convert_to_speed(model.predict(np.array([i,0]), deterministic=True)[0] * i))
         arry.append(convert_to_speed(model.predict(np.array([0,i]), deterministic=True)[0] * i))
+        # TODO: This mapping is wrong
         x.append(convert_to_speed(i))
     
     arrx = np.array(arrx)
