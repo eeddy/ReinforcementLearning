@@ -26,7 +26,7 @@ class TFGym(gym.Env):
         self.BLACK = (0,0,0)
         self.RED   = (255,0,0)
         self.cursor_size = 7
-        self.max_target_size = 50
+        self.max_target_size = self.cursor_size * 3
 
         self.cursor = None 
         self.target = None 
@@ -37,8 +37,8 @@ class TFGym(gym.Env):
         self._dx = 0
         self._dy = 0
 
-        self.w = 1000
-        self.h = 1000
+        self.w = 500
+        self.h = 500
 
         self._last_dist = 1000000 
 
@@ -129,7 +129,7 @@ class TFGym(gym.Env):
         if self.window is None:
             pygame.init()
             pygame.display.init()
-            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) 
+            self.window = pygame.display.set_mode((500, 500))#pygame.display.set_mode((0, 0), pygame.FULLSCREEN) 
             self.w, self.h = pygame.display.get_surface().get_size()
             self.font = pygame.font.SysFont('helvetica', 40)
             pygame.mouse.set_visible(False)
