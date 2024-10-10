@@ -20,10 +20,10 @@ class Mouse(InputDevice):
 def p_func(_):
     return np.array([1,1])
 
-actions = {'low': 0, 'high': 20}
+actions = {'low': 0, 'high': 5}
 pretrain = {'func': p_func, 'epochs': 10, 'samples': 100000}
 
 if __name__ == "__main__":
     mouse = Mouse()
-    tuner = TFEnvironment(mouse, actions, pretrain, timesteps=40000)
+    tuner = TFEnvironment(mouse, actions, pretrain, timesteps=25000)
     tuner.run()

@@ -129,7 +129,7 @@ class TFGym(gym.Env):
         if self.window is None:
             pygame.init()
             pygame.display.init()
-            self.window = pygame.display.set_mode((500, 500))#pygame.display.set_mode((0, 0), pygame.FULLSCREEN) 
+            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)  # pygame.display.set_mode((500, 500))
             self.w, self.h = pygame.display.get_surface().get_size()
             self.font = pygame.font.SysFont('helvetica', 40)
             pygame.mouse.set_visible(False)
